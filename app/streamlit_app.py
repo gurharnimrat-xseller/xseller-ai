@@ -149,7 +149,7 @@ def main():
     st.caption("Monitor AI shorts, social posts, and automation performance.")
 
     shorts_queue, text_post_queue = load_queue_json()
-    hooks_lab_records = load_hooks_lab()
+    hooks_lab_records = load_hooks_lab(HOOKS_CSV)
     db_records = load_db_json()
 
     tabs = st.tabs(
