@@ -1,0 +1,132 @@
+name: ai-news-daily
+schedule:
+  cron: "0 */6 * * *"  # every 6 hours
+description: >
+  Automated AI & technology news pipeline powering daily short-form videos and social posts.
+defaults:
+  env:
+    OPENAI_MODEL: "gpt-4.1-mini"
+    SUMMARY_STYLE: "Why it matters → What happened → What’s next"
+
+steps:
+  - id: fetch-ai-news
+    uses: scraper.fetch_rss
+    with:
+      feeds:
+        - https://techcrunch.com/tag/ai/feed/
+        - https://venturebeat.com/category/ai/feed/
+        - https://www.technologyreview.com/feed/tag/artificial-intelligence/
+        - https://openai.com/blog/rss
+        - https://arxiv.org/rss/cs.AI
+      since: 1d
+    out: raw_ai_articles
+
+  - id: normalize-ai-news
+    uses: transforms.normalize_articles
+    with:
+      input: $steps.fetch-ai-news.output
+      dedupe_on:
+        - title
+        - link
+      required_fields:
+        - title
+        - summary
+        - published_at
+        - link
+    out: normalized_ai_articles
+
+  - id: rank-ai-news
+    uses: llm.rank
+    with:
+      input: $steps.normalize-ai-news.output
+      prompt: |
+        Rank these AI stories by virality potential for social video.
+        Prioritize breaking releases, funding rounds, celebrity or big-tech mentions,
+        and stories with strong emotional hooks.
+      top_n: 5
+    out: top_ai_news
+
+  - id: summarize-ai-news
+    uses: llm.summarize
+    with:
+      input: $steps.rank-ai-news.output
+      prompt: |
+        Summarize each article in 40-60 words using:
+        "Why it matters → What happened → What’s next"
+        Maintain an energetic yet factual tone.
+    out: ai_scripts
+
+  - id: generate-hook-variants
+    uses: llm.generate
+    with:
+      input: $steps.ai_scripts.output
+      prompt: |
+        For each script provide 3 hooks:
+        1. Shock data hook
+        2. Celebrity / big-tech name drop
+        3. Impact-on-you framing
+        Return JSON with keys: script_id, hooks[]
+    out: hook_variants
+
+  - id: generate-voiceover
+    uses: media.tts
+    with:
+      provider: elevenlabs
+      voice: "Rachel"
+      input: $steps.ai_scripts.output
+    out: tts_audio
+
+  - id: assemble-video
+    uses: media.assemble_video
+    with:
+      voiceover: $steps.generate-voiceover.output
+      script: $steps.ai_scripts.output
+      hooks: $steps.generate-hook-variants.output
+      template: assets/templates/kinetic_ai_short.json
+    out: short_videos
+
+  - id: generate-text-posts
+    uses: llm.generate
+    with:
+      input: $steps.ai_scripts.output
+      prompt: |
+        For each AI story below, produce platform-ready copy and image prompts for:
+        - X (<=280 chars, punchy, 2 hashtags)
+        - LinkedIn (<=600 chars, impact + takeaway, 3 hashtags)
+        - Instagram (caption <=2200 chars, conversational with emojis, CTA)
+        - Facebook (<=400 chars, friendly + informative, 2 hashtags)
+        Include image_prompt field tailored to each platform's post.
+    out: social_posts
+
+  - id: render-social-images
+    uses: media.image_generate
+    with:
+      provider: runway
+      input: $steps.generate-text-posts.output
+      format: square
+    out: social_images
+
+  - id: update-dashboard-queue
+    uses: storage.queue_items
+    with:
+      videos: $steps.short_videos.output
+      social_posts: $steps.generate-text-posts.output
+      social_images: $steps.render-social-images.output
+      queue_path: data/ai_shorts_queue.json
+      db_path: data/ai_shorts_db.json
+      hooks_lab_path: data/hooks_lab.csv
+    out: dashboard_items
+
+  - id: notify-review
+    uses: comms.notion_update
+    with:
+      database_id: ${NOTION_DB_ID}
+      items: $steps.update-dashboard-queue.output
+      status: "Ready for Review"
+
+  - id: autopublish-approved
+    uses: integrations.repurposeio.publish
+    with:
+      api_key: ${REPURPOSE_API_KEY}
+      queue_input: $steps.update-dashboard-queue.output
+      posting_mode: ${POSTING_MODE}

@@ -1,0 +1,8 @@
+streamlit
+feedparser
+openai
+python-dotenv
+requests
+Pillow
+certifi
+elevenlabs

@@ -1,0 +1,17 @@
+# Environment / credentials
+.env
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Data outputs
+outputs/
+*.mp4
+*.png
+*.txt
+
+# Local caches
+.DS_Store
+
