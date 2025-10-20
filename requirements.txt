@@ -6,3 +6,4 @@ requests
 Pillow
 certifi
 elevenlabs
+pandas

@@ -1,22 +1,62 @@
-import csv
 import json
 from datetime import datetime
 from pathlib import Path
 
+import pandas as pd
 import streamlit as st
 
+# --- NEW: safe paths & loaders ---
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 OUTPUTS_DIR = Path(__file__).resolve().parents[1] / "outputs"
 
+QUEUE_JSON = DATA_DIR / "ai_shorts_queue.json"
+DB_JSON = DATA_DIR / "ai_shorts_db.json"
+HOOKS_CSV = DATA_DIR / "hooks_lab.csv"
 
-def load_json(path: Path):
+
+def _safe_read_json(path: Path, default):
+    try:
+        if path.exists():
+            return json.loads(path.read_text())
+    except Exception:  # noqa: BLE001
+        pass
+    return default
+
+
+def load_queue_json():
+    """Returns (shorts_list, text_posts_list). Creates empty file on first run."""
+    if not QUEUE_JSON.exists():
+        QUEUE_JSON.write_text(json.dumps({"shorts": [], "text_posts": []}, indent=2))
+    data = _safe_read_json(QUEUE_JSON, {"shorts": [], "text_posts": []})
+    if isinstance(data, list):
+        shorts = [item for item in data if item.get("type") == "video"]
+        text_posts = [item for item in data if item.get("type") == "text_post"]
+        data = {"shorts": shorts, "text_posts": text_posts}
+        QUEUE_JSON.write_text(json.dumps(data, indent=2))
+    return data.get("shorts", []), data.get("text_posts", [])
+
+
+def load_db_json():
+    """Optional: local DB cache for the dashboard"""
+    return _safe_read_json(DB_JSON, [])
+
+
+def load_hooks_lab(path: Path = HOOKS_CSV) -> pd.DataFrame:
+    """Create the CSV if missing; return a DataFrame."""
     if not path.exists():
-        return []
-    with path.open("r", encoding="utf-8") as f:
-        try:
-            return json.load(f)
-        except json.JSONDecodeError:
-            return []
+        pd.DataFrame(
+            columns=[
+                "date",
+                "story_title",
+                "hook_style",
+                "hook_text",
+                "retention_3s",
+                "ctr",
+                "keep_or_kill",
+            ]
+        ).to_csv(path, index=False)
+    return pd.read_csv(path)
 
 
 def get_daily_output_dirs(base: Path):
@@ -108,11 +148,9 @@ def main():
     st.title("🤖 XSELLER.AI — Daily AI News Automation")
     st.caption("Monitor AI shorts, social posts, and automation performance.")
 
-    queue_path = DATA_DIR / "ai_shorts_queue.json"
-    queue_items = load_json(queue_path)
-    video_items = [item for item in queue_items if item.get("type") == "video"]
-    text_post_items = [item for item in queue_items if item.get("type") == "text_post"]
-    hooks_lab_records = load_hooks_lab(DATA_DIR / "hooks_lab.csv")
+    shorts_queue, text_post_queue = load_queue_json()
+    hooks_lab_records = load_hooks_lab()
+    db_records = load_db_json()
 
     tabs = st.tabs(
         [
@@ -126,11 +164,11 @@ def main():
 
     with tabs[0]:
         st.header("AI News Shorts Queue")
-        render_video_queue(video_items)
+        render_video_queue(shorts_queue)
 
     with tabs[1]:
         st.header("Text Posts")
-        render_text_posts(text_post_items)
+        render_text_posts(text_post_queue)
 
     with tabs[2]:
         st.header("Hook Lab")
@@ -138,6 +176,9 @@ def main():
             "Upload weekly learnings or import `hooks_lab.csv` to track hooks, topics, and performance."
         )
         st.dataframe(hooks_lab_records)
+        if db_records:
+            st.markdown("### Recent Scripts")
+            st.json(db_records)
 
     with tabs[3]:
         st.header("KPI Dashboard")
