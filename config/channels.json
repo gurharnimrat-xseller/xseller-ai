@@ -1,0 +1,50 @@
+[
+  {
+    "id": "youtube",
+    "name": "YouTube Shorts",
+    "platform": "repurpose",
+    "type": "video",
+    "status": "active",
+    "icon": "▶️"
+  },
+  {
+    "id": "tiktok",
+    "name": "TikTok",
+    "platform": "repurpose",
+    "type": "video",
+    "status": "active",
+    "icon": "🎵"
+  },
+  {
+    "id": "instagram",
+    "name": "Instagram Reels",
+    "platform": "repurpose",
+    "type": "video",
+    "status": "active",
+    "icon": "📷"
+  },
+  {
+    "id": "facebook",
+    "name": "Facebook",
+    "platform": "repurpose",
+    "type": "video",
+    "status": "active",
+    "icon": "📘"
+  },
+  {
+    "id": "linkedin",
+    "name": "LinkedIn",
+    "platform": "repurpose",
+    "type": "video",
+    "status": "active",
+    "icon": "💼"
+  },
+  {
+    "id": "snapchat",
+    "name": "Snapchat Spotlight",
+    "platform": "repurpose",
+    "type": "video",
+    "status": "active",
+    "icon": "📸"
+  }
+]

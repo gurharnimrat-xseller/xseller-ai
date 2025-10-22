@@ -5,6 +5,8 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+st.set_page_config(page_title="XSELLER.AI", page_icon="🤖", layout="wide")
+
 # --- NEW: safe paths & loaders ---
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)

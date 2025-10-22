@@ -11,7 +11,7 @@ outputs/
 *.mp4
 *.png
 *.txt
+logs/
 
 # Local caches
 .DS_Store
-
