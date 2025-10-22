@@ -1,20 +1,24 @@
+"""
+Queue + publish pipeline via Publer API.
+"""
 import json
 from pathlib import Path
 from typing import Dict, List
 
-from services.repurpose_client import RepurposeError, publish_video
-
+from services.publer_client import PublerError, create_post
 
 DATA = Path("data")
 DATA.mkdir(exist_ok=True)
 QUEUE = DATA / "publish_queue.json"
 
 SUPPORTED_PLATFORMS = [
+    "facebook",
+    "instagram",
+    "linkedin",
+    "twitter",
     "youtube",
     "tiktok",
-    "instagram",
-    "facebook",
-    "linkedin",
+    "pinterest",
     "snapchat",
 ]
 
@@ -34,21 +38,19 @@ def _save_queue(obj: Dict[str, List[dict]]) -> None:
 
 def enqueue_post(
     item_id: str,
-    platform: str,
-    mp4_url: str,
     title: str,
     caption: str,
-    hashtags: str,
+    media: List[str],
+    platforms: List[str],
 ) -> bool:
     queue = _load_queue()
     queue["items"].append(
         {
             "item_id": item_id,
-            "platform": platform,
-            "mp4_url": mp4_url,
             "title": title,
             "caption": caption,
-            "hashtags": hashtags,
+            "media": media,
+            "platforms": platforms,
             "status": "queued",
         }
     )
@@ -57,35 +59,30 @@ def enqueue_post(
 
 
 def publish_one(entry: dict) -> dict:
-    if entry["platform"] not in SUPPORTED_PLATFORMS:
-        entry["status"] = "error"
-        entry["error"] = "unsupported_platform"
-        return {"status": "error", "error": "unsupported_platform"}
+    text = f"{entry['title']}\n\n{entry['caption']}".strip()
     try:
-        response = publish_video(
-            platform_id=entry["platform"],
-            asset_url=entry["mp4_url"],
-            title=entry["title"],
-            caption=entry["caption"],
-            hashtags=entry["hashtags"],
+        response = create_post(
+            text=text,
+            media_urls=entry["media"],
+            platforms=entry["platforms"],
         )
-    except RepurposeError as exc:
+    except PublerError as exc:
         entry["status"] = "error"
         entry["error"] = str(exc)
         return {"status": "error", "error": str(exc)}
 
     entry["status"] = "posted"
-    entry["provider_response"] = response
-    return {"status": "ok", "response": response}
+    entry["response"] = response
+    return {"status": "ok", "resp": response}
 
 
 def process_queue() -> Dict[str, List[dict]]:
     queue = _load_queue()
-    updated = False
+    changed = False
     for item in queue["items"]:
         if item.get("status") == "queued":
             publish_one(item)
-            updated = True
-    if updated:
+            changed = True
+    if changed:
         _save_queue(queue)
     return queue

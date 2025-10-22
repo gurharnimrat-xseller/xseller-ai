@@ -1,34 +1,34 @@
 import json
 from pathlib import Path
-from typing import List
 
 import streamlit as st
 
 from services.publish_service import enqueue_post, process_queue
 
 st.set_page_config(page_title="Social Posts", page_icon="📣", layout="wide")
-st.title("📣 Social Posts")
+st.title("📣 Social Posts via Publer.io")
 
 DATA = Path("data")
 DB = DATA / "ai_shorts_db.json"
 QUEUE = DATA / "publish_queue.json"
 
 
-def _load_json(path: Path, default):
-    if not path.exists():
-        return default
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return default
-
-
-def load_db() -> List[dict]:
-    return _load_json(DB, [])
+def load_db() -> list:
+    if DB.exists():
+        try:
+            return json.loads(DB.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return []
+    return []
 
 
 def load_queue() -> dict:
-    return _load_json(QUEUE, {"items": []})
+    if QUEUE.exists():
+        try:
+            return json.loads(QUEUE.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return {"items": []}
+    return {"items": []}
 
 
 col1, col2 = st.columns([2, 1])
@@ -36,63 +36,49 @@ col1, col2 = st.columns([2, 1])
 with col1:
     st.subheader("Rendered Videos")
     items = load_db()
-    videos = [
-        item
-        for item in items
-        if item.get("render", {}).get("mp4_url")
-        and item.get("status") in ("rendered", "approved_video", "posted")
-    ]
+    videos = [item for item in items if item.get("render", {}).get("mp4_url")]
     if not videos:
-        st.info("No rendered items found yet.")
-        selected_video = None
+        st.info("No rendered videos yet.")
     else:
-        options = [
-            f'{item.get("date", "unknown")} — {item.get("title", "Untitled")}'
-            for item in videos
-        ]
-        selection = st.selectbox("Choose a video", options=options)
-        selected_video = videos[options.index(selection)]
-        st.video(selected_video["render"]["mp4_url"])
-        default_caption = selected_video.get("script", "")[:250]
-        caption = st.text_area("Caption", value=default_caption)
-        hashtags = st.text_input(
-            "Hashtags",
-            value=" ".join(selected_video.get("hashtags", ["#AI", "#TechNews"])),
-        )
-        channel = st.selectbox(
-            "Channel",
-            options=[
+        titles = [video.get("title", "Untitled") for video in videos]
+        selected_title = st.selectbox("Select video", options=titles)
+        chosen = videos[titles.index(selected_title)]
+        st.video(chosen["render"]["mp4_url"])
+        caption = st.text_area("Caption", value=chosen.get("script", "")[:250])
+        platforms = st.multiselect(
+            "Select Platforms",
+            [
+                "facebook",
+                "instagram",
+                "linkedin",
+                "twitter",
                 "youtube",
                 "tiktok",
-                "instagram",
-                "facebook",
-                "linkedin",
+                "pinterest",
                 "snapchat",
             ],
+            default=["instagram", "tiktok"],
         )
-        if st.button("Enqueue for Publish", disabled=selected_video is None):
+        if st.button("Enqueue Post"):
             enqueue_post(
-                selected_video["id"],
-                channel,
-                selected_video["render"]["mp4_url"],
-                selected_video.get("title", "Untitled"),
+                chosen["id"],
+                chosen.get("title", "Untitled"),
                 caption,
-                hashtags,
+                [chosen["render"]["mp4_url"]],
+                platforms,
             )
-            st.success("Enqueued for publish.")
+            st.success("✅ Post queued!")
 
 with col2:
     st.subheader("Publish Queue")
     if st.button("Process Queue Now"):
         process_queue()
-        st.success("Queue processed. Refresh list below.")
+        st.success("Queue processed.")
     queue = load_queue()
     if not queue.get("items"):
         st.caption("Queue is empty.")
     else:
-        for entry in queue["items"]:
-            st.markdown(
-                f"- **{entry['platform']}** — {entry.get('title','Untitled')} — `{entry['status']}`"
-            )
+        for entry in queue.get("items", []):
+            st.write(f"{entry['title']} → {', '.join(entry['platforms'])} → {entry['status']}")
             if entry.get("error"):
                 st.caption(entry["error"])
