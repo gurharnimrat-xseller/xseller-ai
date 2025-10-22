@@ -27,7 +27,8 @@ def _safe_read_json(path: Path, default):
 def load_queue_json():
     """Returns (shorts_list, text_posts_list). Creates empty file on first run."""
     if not QUEUE_JSON.exists():
-        QUEUE_JSON.write_text(json.dumps({"shorts": [], "text_posts": []}, indent=2))
+        QUEUE_JSON.write_text(json.dumps(
+            {"shorts": [], "text_posts": []}, indent=2))
     data = _safe_read_json(QUEUE_JSON, {"shorts": [], "text_posts": []})
     if isinstance(data, list):
         shorts = [item for item in data if item.get("type") == "video"]
@@ -70,7 +71,8 @@ def get_daily_output_dirs(base: Path):
 
 def render_video_queue(queue_items):
     if not queue_items:
-        st.info("No video items queued. Pipeline will populate this section after the next run.")
+        st.info(
+            "No video items queued. Pipeline will populate this section after the next run.")
         return
 
     for item in queue_items:
@@ -87,12 +89,13 @@ def render_video_queue(queue_items):
             audio_path = item.get("audio_path")
             if audio_path and Path(audio_path).exists():
                 st.audio(str(audio_path))
-            st.checkbox("Approve", key=f"video_approve_{item.get('id','')}")
+            st.checkbox("Approve", key=f"video_approve_{item.get('id', '')}")
 
 
 def render_text_posts(posts):
     if not posts:
-        st.info("No text posts generated yet. They will appear here after the pipeline run.")
+        st.info(
+            "No text posts generated yet. They will appear here after the pipeline run.")
         return
 
     for post in posts:
@@ -106,7 +109,8 @@ def render_text_posts(posts):
                     st.image(str(image_path))
                 elif prompt := content.get("image_prompt"):
                     st.caption(f"Image prompt: {prompt}")
-                st.checkbox("Approve", key=f"text_{platform}_{post.get('id','')}")
+                st.checkbox(
+                    "Approve", key=f"text_{platform}_{post.get('id', '')}")
 
 
 def render_outputs():
@@ -195,7 +199,8 @@ def main():
     st.sidebar.success(
         "Connected domain: app.xseller.ai is live!"
     )
-    st.sidebar.markdown(f"Last refreshed: {datetime.utcnow():%Y-%m-%d %H:%M UTC}")
+    st.sidebar.markdown(
+        f"Last refreshed: {datetime.utcnow():%Y-%m-%d %H:%M UTC}")
 
 
 if __name__ == "__main__":
