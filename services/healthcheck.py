@@ -1,4 +1,5 @@
 import json
+import os
 import socket
 import sys
 from pathlib import Path
@@ -8,11 +9,27 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from services import buffer_client, getlate_client
 from services.publer_client import ping as publer_ping
 
 LOGS = Path("logs")
 LOGS.mkdir(parents=True, exist_ok=True)
 OUT = LOGS / "health_last.json"
+
+
+def check_getlate() -> Dict[str, str | bool]:
+    ok = bool(getlate_client.GETLATE_KEY)
+    detail = "token_present" if ok else "missing_key"
+    return {"name": "getlate", "ok": ok, "detail": detail}
+
+
+def check_buffer() -> Dict[str, str | bool]:
+    ok = bool(buffer_client.BUFFER_TOKEN and buffer_client.BUFFER_PROFILE)
+    if ok:
+        detail = "token_present"
+    else:
+        detail = "missing_token_or_profile"
+    return {"name": "buffer", "ok": ok, "detail": detail}
 
 
 def check_publer() -> Dict[str, str | bool]:
@@ -29,7 +46,12 @@ def check_dns(host: str = "app.xseller.ai") -> Dict[str, str | bool]:
 
 
 def run_all() -> Dict[str, bool | List[Dict[str, str | bool]]]:
-    checks: List[Callable[[], Dict[str, str | bool]]] = [check_publer, check_dns]
+    checks: List[Callable[[], Dict[str, str | bool]]] = [
+        check_getlate,
+        check_buffer,
+        check_publer,
+        check_dns,
+    ]
     results = {"ok": True, "checks": []}
     for check in checks:
         result = check()
