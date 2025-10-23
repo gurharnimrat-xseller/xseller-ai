@@ -1,16 +1,18 @@
+"""Service health checks for external integrations."""
+from __future__ import annotations
+
 import json
-import os
 import socket
 import sys
 from pathlib import Path
 from typing import Callable, Dict, List
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from services import buffer_client, getlate_client
-from services.publer_client import ping as publer_ping
+from app.services import buffer_client, getlate_client
+from app.services.publer_client import ping as publer_ping
 
 LOGS = Path("logs")
 LOGS.mkdir(parents=True, exist_ok=True)
@@ -25,10 +27,7 @@ def check_getlate() -> Dict[str, str | bool]:
 
 def check_buffer() -> Dict[str, str | bool]:
     ok = bool(buffer_client.BUFFER_TOKEN and buffer_client.BUFFER_PROFILE)
-    if ok:
-        detail = "token_present"
-    else:
-        detail = "missing_token_or_profile"
+    detail = "token_present" if ok else "missing_token_or_profile"
     return {"name": "buffer", "ok": ok, "detail": detail}
 
 

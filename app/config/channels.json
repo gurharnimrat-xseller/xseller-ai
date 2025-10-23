@@ -2,7 +2,7 @@
   {
     "id": "youtube",
     "name": "YouTube Shorts",
-    "platform": "publer",
+    "platform": "multi",
     "type": "video",
     "status": "active",
     "icon": "▶️"
@@ -10,7 +10,7 @@
   {
     "id": "tiktok",
     "name": "TikTok",
-    "platform": "publer",
+    "platform": "multi",
     "type": "video",
     "status": "active",
     "icon": "🎵"
@@ -18,7 +18,7 @@
   {
     "id": "instagram",
     "name": "Instagram Reels",
-    "platform": "publer",
+    "platform": "multi",
     "type": "video",
     "status": "active",
     "icon": "📷"
@@ -26,7 +26,7 @@
   {
     "id": "facebook",
     "name": "Facebook",
-    "platform": "publer",
+    "platform": "multi",
     "type": "video",
     "status": "active",
     "icon": "📘"
@@ -34,7 +34,7 @@
   {
     "id": "linkedin",
     "name": "LinkedIn",
-    "platform": "publer",
+    "platform": "multi",
     "type": "video",
     "status": "active",
     "icon": "💼"
@@ -42,7 +42,7 @@
   {
     "id": "twitter",
     "name": "Twitter (X)",
-    "platform": "publer",
+    "platform": "multi",
     "type": "video",
     "status": "active",
     "icon": "🐦"
@@ -50,7 +50,7 @@
   {
     "id": "pinterest",
     "name": "Pinterest",
-    "platform": "publer",
+    "platform": "multi",
     "type": "video",
     "status": "active",
     "icon": "📌"
@@ -58,7 +58,7 @@
   {
     "id": "snapchat",
     "name": "Snapchat Spotlight",
-    "platform": "repurpose",
+    "platform": "multi",
     "type": "video",
     "status": "active",
     "icon": "📸"

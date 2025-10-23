@@ -1,6 +1,6 @@
-"""
-Simple Publer.io API wrapper.
-"""
+"""Simple Publer.io API wrapper."""
+from __future__ import annotations
+
 import json
 import os
 from pathlib import Path
@@ -19,7 +19,7 @@ class PublerError(Exception):
     """Raised when Publer.io returns an error or configuration is missing."""
 
 
-def _hdr() -> dict:
+def _headers() -> dict:
     if not PUBLER_KEY:
         raise PublerError("Missing PUBLER_API_KEY")
     return {"Authorization": f"Bearer {PUBLER_KEY}", "Content-Type": "application/json"}
@@ -28,7 +28,7 @@ def _hdr() -> dict:
 def ping() -> bool:
     """Return True if the Publer API responds successfully."""
     try:
-        response = requests.get(f"{BASE}/me", headers=_hdr(), timeout=10)
+        response = requests.get(f"{BASE}/me", headers=_headers(), timeout=10)
         return response.status_code == 200
     except Exception:  # noqa: BLE001
         return False
@@ -39,7 +39,9 @@ def list_platforms() -> dict:
     if not WORKSPACE_ID:
         raise PublerError("Missing PUBLER_WORKSPACE_ID")
     response = requests.get(
-        f"{BASE}/workspaces/{WORKSPACE_ID}/accounts", headers=_hdr(), timeout=15
+        f"{BASE}/workspaces/{WORKSPACE_ID}/accounts",
+        headers=_headers(),
+        timeout=15,
     )
     response.raise_for_status()
     return response.json()
@@ -62,7 +64,7 @@ def create_post(
         "schedule": schedule,
     }
     response = requests.post(
-        f"{BASE}/posts", headers=_hdr(), json=payload, timeout=30
+        f"{BASE}/posts", headers=_headers(), json=payload, timeout=30
     )
     if response.status_code >= 300:
         LOGS.joinpath("publer_error.log").write_text(response.text)

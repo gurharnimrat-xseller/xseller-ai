@@ -15,7 +15,7 @@ class BufferError(Exception):
     """Raised when Buffer returns an error response."""
 
 
-def _hdr() -> dict:
+def _headers() -> dict:
     if not BUFFER_TOKEN:
         raise BufferError("Missing BUFFER_ACCESS_TOKEN")
     return {"Authorization": f"Bearer {BUFFER_TOKEN}"}
@@ -30,10 +30,7 @@ def post_to_buffer(
     if not BUFFER_PROFILE:
         raise BufferError("Missing BUFFER_PROFILE_ID")
     text = f"{title}\n\n{caption}".strip()
-    media_payload = {}
-    if media_urls:
-        # Buffer's API expects media to be mapped per key; using 'photo' for simplicity.
-        media_payload = {"photo": media_urls[0]}
+    media_payload = {"photo": media_urls[0]} if media_urls else {}
     payload = {
         "profile_ids": [BUFFER_PROFILE],
         "text": text,
@@ -42,7 +39,7 @@ def post_to_buffer(
     }
     response = requests.post(
         f"{BASE}/updates/create.json",
-        headers=_hdr(),
+        headers=_headers(),
         data=payload,
         timeout=20,
     )

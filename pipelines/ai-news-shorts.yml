@@ -112,9 +112,9 @@ steps:
       videos: $steps.short_videos.output
       social_posts: $steps.generate-text-posts.output
       social_images: $steps.render-social-images.output
-      queue_path: data/ai_shorts_queue.json
-      db_path: data/ai_shorts_db.json
-      hooks_lab_path: data/hooks_lab.csv
+      queue_path: app/data/ai_shorts_queue.json
+      db_path: app/data/ai_shorts_db.json
+      hooks_lab_path: app/data/hooks_lab.csv
     out: dashboard_items
 
   - id: notify-review

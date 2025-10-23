@@ -14,7 +14,7 @@ class Settings:
     notion_db_id: str | None = None
     posting_mode: str = "manual"
     outputs_dir: str = "outputs"
-    data_dir: str = "data"
+    data_dir: str = "app/data"
 
     def __post_init__(self) -> None:
         self.openai_api_key = os.getenv("OPENAI_API_KEY")

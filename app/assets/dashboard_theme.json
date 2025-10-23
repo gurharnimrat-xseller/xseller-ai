@@ -1,0 +1,10 @@
+{
+  "primary": "#00b894",
+  "secondary": "#2d3436",
+  "background": "#0c1116",
+  "surface": "#11181f",
+  "accent": "#0984e3",
+  "positive": "#00b894",
+  "warning": "#f39c12",
+  "negative": "#d63031"
+}

@@ -8,6 +8,8 @@ __pycache__/
 
 # Data outputs
 outputs/
+app/data/*.json
+app/data/*.csv
 *.mp4
 *.png
 *.txt

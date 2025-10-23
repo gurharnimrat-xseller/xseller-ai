@@ -14,7 +14,7 @@ class GetLateError(Exception):
     """Raised when GetLate.dev returns an error response."""
 
 
-def _hdr() -> dict:
+def _headers() -> dict:
     if not GETLATE_KEY:
         raise GetLateError("Missing GETLATE_API_KEY")
     return {"Authorization": f"Bearer {GETLATE_KEY}", "Content-Type": "application/json"}
@@ -35,7 +35,7 @@ def post_to_getlate(
     }
     response = requests.post(
         f"{BASE}/posts",
-        headers=_hdr(),
+        headers=_headers(),
         json=payload,
         timeout=20,
     )

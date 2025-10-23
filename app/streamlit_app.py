@@ -1,209 +1,111 @@
-import json
-from datetime import datetime
-from pathlib import Path
+from __future__ import annotations
 
+import json
+from pathlib import Path
+from typing import Any, Dict
+
+import altair as alt
 import pandas as pd
 import streamlit as st
 
-st.set_page_config(page_title="XSELLER.AI", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="XSELLER.AI Ops Console", page_icon="🤖", layout="wide")
 
-# --- NEW: safe paths & loaders ---
-DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+APP_ROOT = Path(__file__).resolve().parent
+DATA_DIR = APP_ROOT / "data"
+CONFIG_DIR = APP_ROOT / "config"
+ASSETS_DIR = APP_ROOT / "assets"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
-OUTPUTS_DIR = Path(__file__).resolve().parents[1] / "outputs"
-
-QUEUE_JSON = DATA_DIR / "ai_shorts_queue.json"
-DB_JSON = DATA_DIR / "ai_shorts_db.json"
-HOOKS_CSV = DATA_DIR / "hooks_lab.csv"
 
 
-def _safe_read_json(path: Path, default):
-    try:
-        if path.exists():
-            return json.loads(path.read_text())
-    except Exception:  # noqa: BLE001
-        pass
-    return default
-
-
-def load_queue_json():
-    """Returns (shorts_list, text_posts_list). Creates empty file on first run."""
-    if not QUEUE_JSON.exists():
-        QUEUE_JSON.write_text(json.dumps(
-            {"shorts": [], "text_posts": []}, indent=2))
-    data = _safe_read_json(QUEUE_JSON, {"shorts": [], "text_posts": []})
-    if isinstance(data, list):
-        shorts = [item for item in data if item.get("type") == "video"]
-        text_posts = [item for item in data if item.get("type") == "text_post"]
-        data = {"shorts": shorts, "text_posts": text_posts}
-        QUEUE_JSON.write_text(json.dumps(data, indent=2))
-    return data.get("shorts", []), data.get("text_posts", [])
-
-
-def load_db_json():
-    """Optional: local DB cache for the dashboard"""
-    return _safe_read_json(DB_JSON, [])
-
-
-def load_hooks_lab(path: Path = HOOKS_CSV) -> pd.DataFrame:
-    """Create the CSV if missing; return a DataFrame."""
+def _load_json(path: Path, default: Any) -> Any:
     if not path.exists():
-        pd.DataFrame(
-            columns=[
-                "date",
-                "story_title",
-                "hook_style",
-                "hook_text",
-                "retention_3s",
-                "ctr",
-                "keep_or_kill",
-            ]
-        ).to_csv(path, index=False)
-    return pd.read_csv(path)
+        return default
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return default
 
 
-def get_daily_output_dirs(base: Path):
-    if not base.exists():
-        return []
-    dated_dirs = [
-        d for d in base.iterdir() if d.is_dir() and d.name[0].isdigit() and "-" in d.name
-    ]
-    return sorted(dated_dirs, reverse=True)
+def _load_dataframe(path: Path, columns: list[str]) -> pd.DataFrame:
+    if not path.exists():
+        return pd.DataFrame(columns=columns)
+    try:
+        return pd.read_csv(path)
+    except Exception:  # pragma: no cover
+        return pd.DataFrame(columns=columns)
 
 
-def render_video_queue(queue_items):
-    if not queue_items:
-        st.info(
-            "No video items queued. Pipeline will populate this section after the next run.")
-        return
+ai_queue = _load_json(DATA_DIR / "ai_shorts_queue.json", {"shorts": [], "text_posts": []})
+ai_db = _load_json(DATA_DIR / "ai_shorts_db.json", [])
+analytics = _load_json(DATA_DIR / "analytics_summary.json", {
+    "daily_posts": [],
+    "platform_views": [],
+    "metrics": {
+        "retention": 0,
+        "shares": 0,
+        "follower_conversion": 0,
+    },
+})
 
-    for item in queue_items:
-        with st.expander(item.get("title", "Untitled Video"), expanded=False):
-            st.write(item.get("summary", ""))
-            hooks = item.get("hooks", [])
-            if hooks:
-                st.write("**Hook Lab Variants**")
-                for hook in hooks:
-                    st.markdown(f"- {hook}")
-            video_path = item.get("video_path")
-            if video_path and Path(video_path).exists():
-                st.video(str(video_path))
-            audio_path = item.get("audio_path")
-            if audio_path and Path(audio_path).exists():
-                st.audio(str(audio_path))
-            st.checkbox("Approve", key=f"video_approve_{item.get('id', '')}")
+metrics: Dict[str, float] = analytics.get("metrics", {})
+col1, col2, col3 = st.columns(3)
+col1.metric("Retention @ 75%", f"{metrics.get('retention', 0):.0%}", "Target ≥ 60%")
+col2.metric("Shares / 1K Views", f"{metrics.get('shares', 0):.1f}", "Target ≥ 25")
+col3.metric("Follower Conversion", f"{metrics.get('follower_conversion', 0):.1%}", "Target ≥ 1.8%")
 
+st.write("---")
+left, right = st.columns([2, 1])
 
-def render_text_posts(posts):
-    if not posts:
-        st.info(
-            "No text posts generated yet. They will appear here after the pipeline run.")
-        return
+with left:
+    st.subheader("📰 Pipeline Snapshot")
+    shorts = ai_queue.get("shorts", [])
+    text_posts = ai_queue.get("text_posts", [])
+    st.write(f"**Short videos queued:** {len(shorts)}")
+    st.write(f"**Text posts queued:** {len(text_posts)}")
+    if shorts:
+        df_shorts = pd.DataFrame([
+            {
+                "Title": item.get("title"),
+                "Hooks": len(item.get("hooks", [])),
+                "Has Audio": bool(item.get("audio_path")),
+            }
+            for item in shorts[:5]
+        ])
+        st.dataframe(df_shorts, use_container_width=True)
+    else:
+        st.info("Run the automation pipeline to populate fresh AI News Shorts.")
 
-    for post in posts:
-        story_title = post.get("story_title", "AI Update")
-        with st.expander(story_title, expanded=False):
-            for platform, content in post.get("platforms", {}).items():
-                st.markdown(f"### {platform}")
-                st.write(content.get("caption", ""))
-                image_path = content.get("image_path")
-                if image_path and Path(image_path).exists():
-                    st.image(str(image_path))
-                elif prompt := content.get("image_prompt"):
-                    st.caption(f"Image prompt: {prompt}")
-                st.checkbox(
-                    "Approve", key=f"text_{platform}_{post.get('id', '')}")
+with right:
+    st.subheader("🔔 Hot Signals")
+    signal_data = analytics.get("signals", [])
+    if signal_data:
+        for sig in signal_data:
+            st.metric(sig.get("label", "Signal"), sig.get("value", "-"), sig.get("delta", ""))
+    else:
+        st.caption("Signals will appear once analytics are connected.")
 
+st.write("---")
 
-def render_outputs():
-    st.subheader("Daily Output Folders")
-    dirs = get_daily_output_dirs(OUTPUTS_DIR)
-    if not dirs:
-        st.info("No dated output directories yet.")
-        return
-
-    selected_day = st.selectbox(
-        "Select run date",
-        options=[d.name for d in dirs],
-        index=0,
+posts_chart_data = analytics.get("daily_posts", [])
+if posts_chart_data:
+    df_posts = pd.DataFrame(posts_chart_data)
+    chart = (
+        alt.Chart(df_posts)
+        .mark_bar(cornerRadiusTopLeft=6, cornerRadiusTopRight=6)
+        .encode(x="date:T", y="posts:Q", color=alt.value("#00b894"))
+        .properties(height=280, title="Daily Posts")
     )
-    videos_dir = OUTPUTS_DIR / selected_day / "video"
-    social_dir = OUTPUTS_DIR / selected_day / "social"
+    st.altair_chart(chart, use_container_width=True)
+else:
+    st.caption("Daily posts chart will render once analytics_summary.json is populated.")
 
-    cols = st.columns(2)
-    with cols[0]:
-        st.markdown("**Videos**")
-        if videos_dir.exists():
-            for file in videos_dir.glob("*.mp4"):
-                st.markdown(f"- {file.name}")
-        else:
-            st.caption("No videos saved.")
+st.write("\n")
+st.info(
+    "Use the sidebar to navigate AI News Shorts, Text Posts, Social Publishing, Analytics, Learning, Hook Lab, and Settings."
+)
 
-    with cols[1]:
-        st.markdown("**Social Posts**")
-        if social_dir.exists():
-            for file in social_dir.iterdir():
-                st.markdown(f"- {file.name}")
-        else:
-            st.caption("No social assets saved.")
+logo_path = ASSETS_DIR / "xseller_logo.svg"
+if logo_path.exists():
+    st.sidebar.image(str(logo_path), caption="XSELLER.AI", use_column_width=True)
 
-
-def main():
-    st.set_page_config(page_title="Xseller AI Dashboard", layout="wide")
-
-    st.title("🤖 XSELLER.AI — Daily AI News Automation")
-    st.caption("Monitor AI shorts, social posts, and automation performance.")
-
-    shorts_queue, text_post_queue = load_queue_json()
-    hooks_lab_records = load_hooks_lab(HOOKS_CSV)
-    db_records = load_db_json()
-
-    tabs = st.tabs(
-        [
-            "AI News Shorts",
-            "Text Posts",
-            "Hook Lab",
-            "KPI Dashboard",
-            "Outputs",
-        ]
-    )
-
-    with tabs[0]:
-        st.header("AI News Shorts Queue")
-        render_video_queue(shorts_queue)
-
-    with tabs[1]:
-        st.header("Text Posts")
-        render_text_posts(text_post_queue)
-
-    with tabs[2]:
-        st.header("Hook Lab")
-        st.write(
-            "Upload weekly learnings or import `hooks_lab.csv` to track hooks, topics, and performance."
-        )
-        st.dataframe(hooks_lab_records)
-        if db_records:
-            st.markdown("### Recent Scripts")
-            st.json(db_records)
-
-    with tabs[3]:
-        st.header("KPI Dashboard")
-        st.write(
-            "Integrate your analytics source here (Repurpose.io, platform APIs) to surface retention, shares, and conversions."
-        )
-        st.metric("Retention @ 75%", "—", "Target: ≥60%")
-        st.metric("Shares / 1k Views", "—", "Target: ≥25")
-        st.metric("Follower Conversion", "—", "Target: ≥1.8%")
-
-    with tabs[4]:
-        render_outputs()
-
-    st.sidebar.success(
-        "Connected domain: app.xseller.ai is live!"
-    )
-    st.sidebar.markdown(
-        f"Last refreshed: {datetime.utcnow():%Y-%m-%d %H:%M UTC}")
-
-
-if __name__ == "__main__":
-    main()
+st.sidebar.success("Ready to orchestrate tomorrow's AI coverage.")

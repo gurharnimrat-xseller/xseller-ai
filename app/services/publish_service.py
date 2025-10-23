@@ -7,24 +7,23 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
 
-from services.buffer_client import BufferError, post_to_buffer
-from services.getlate_client import GetLateError, post_to_getlate
+from app.services.buffer_client import post_to_buffer
+from app.services.getlate_client import post_to_getlate
 
 try:
-    from services.publer_client import PublerError, create_post
+    from app.services.publer_client import create_post
 except Exception:  # pragma: no cover - optional dependency guard
-    class PublerError(Exception):
+    class PublerMissing(Exception):
         pass
 
     def create_post(*_args, **_kwargs):  # type: ignore
-        return {"status": "mock_publer"}
+        raise PublerMissing("Publer client not available")
 
 
-DATA = Path("data")
+DATA = Path(__file__).resolve().parents[1] / "data"
 DATA.mkdir(exist_ok=True)
 QUEUE = DATA / "publish_queue.json"
 CONFIG = DATA / "last_provider.json"
-
 
 SUPPORTED_PLATFORMS = [
     "youtube",
@@ -69,7 +68,8 @@ def _last_provider() -> str:
                 return provider
         except (json.JSONDecodeError, OSError):  # pragma: no cover
             pass
-    return os.getenv("POST_PROVIDER", "getlate") if os.getenv("POST_PROVIDER") in PROVIDERS else "getlate"
+    env_provider = os.getenv("POST_PROVIDER", "getlate")
+    return env_provider if env_provider in PROVIDERS else "getlate"
 
 
 def enqueue_post(
