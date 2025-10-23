@@ -5,8 +5,8 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from app.services.ai_news_service import load_queue
-from app.services.theme_manager import theme_toggle
+from services.ai_news_service import load_queue
+from services.theme_manager import theme_toggle
 from app.ui_utils import inject_global_styles
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"

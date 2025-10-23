@@ -3,8 +3,8 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from app.services.analytics_service import load_summary
-from app.services.theme_manager import theme_toggle
+from services.analytics_service import load_summary
+from services.theme_manager import theme_toggle
 from app.ui_utils import inject_global_styles
 
 st.set_page_config(page_title="Analytics", page_icon="📊", layout="wide")

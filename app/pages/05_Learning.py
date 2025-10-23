@@ -5,7 +5,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from app.services.theme_manager import theme_toggle
+from services.theme_manager import theme_toggle
 from app.ui_utils import inject_global_styles
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
