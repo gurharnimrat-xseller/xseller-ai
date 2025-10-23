@@ -5,10 +5,13 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+from app.ui_utils import inject_global_styles
+
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 HOOKS_PATH = DATA_DIR / "hooks_lab.csv"
 
 st.set_page_config(page_title="Hook Lab", page_icon="🧪", layout="wide")
+inject_global_styles()
 st.title("🧪 Hook Lab")
 
 if not HOOKS_PATH.exists():

@@ -4,8 +4,10 @@ import pandas as pd
 import streamlit as st
 
 from app.services.analytics_service import load_summary
+from app.ui_utils import inject_global_styles
 
 st.set_page_config(page_title="Analytics", page_icon="📊", layout="wide")
+inject_global_styles()
 st.title("📊 Performance Analytics")
 
 analytics = load_summary()

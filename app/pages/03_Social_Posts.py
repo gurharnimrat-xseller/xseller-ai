@@ -10,8 +10,10 @@ from app.services.publish_service import (
     process_queue,
     _last_provider,
 )
+from app.ui_utils import inject_global_styles
 
 st.set_page_config(page_title="Social Posts", page_icon="📣", layout="wide")
+inject_global_styles()
 st.title("📣 Multi-Provider Social Posts")
 
 APP_ROOT = Path(__file__).resolve().parents[1]

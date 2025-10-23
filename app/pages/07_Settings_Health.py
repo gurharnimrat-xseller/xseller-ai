@@ -6,10 +6,12 @@ from pathlib import Path
 import streamlit as st
 
 from app.services.healthcheck import run_all
+from app.ui_utils import inject_global_styles
 
 LOGS_PATH = Path("logs/health_last.json")
 
 st.set_page_config(page_title="Settings & Health", page_icon="⚙️", layout="wide")
+inject_global_styles()
 st.title("⚙️ Settings & Health")
 
 with st.expander("Environment Keys", expanded=False):

@@ -12,9 +12,17 @@ ANALYTICS_PATH = DATA_DIR / "analytics_summary.json"
 
 def load_summary(default: Dict[str, Any] | None = None) -> Dict[str, Any]:
     default = default or {
-        "metrics": {"retention": 0, "shares": 0, "follower_conversion": 0},
+        "metrics": {
+            "retention": 0,
+            "retention_delta": 0,
+            "shares": 0,
+            "shares_delta": 0,
+            "follower_conversion": 0,
+            "follower_conversion_delta": 0,
+        },
         "daily_posts": [],
         "platform_views": [],
+        "signals": [],
     }
     if not ANALYTICS_PATH.exists():
         return default

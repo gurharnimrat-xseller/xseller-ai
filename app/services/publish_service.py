@@ -7,11 +7,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
 
-from app.services.buffer_client import post_to_buffer
-from app.services.getlate_client import post_to_getlate
+from .buffer_client import post_to_buffer
+from .getlate_client import post_to_getlate
 
 try:
-    from app.services.publer_client import create_post
+    from .publer_client import create_post
 except Exception:  # pragma: no cover - optional dependency guard
     class PublerMissing(Exception):
         pass

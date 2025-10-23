@@ -3,16 +3,11 @@ from __future__ import annotations
 
 import json
 import socket
-import sys
 from pathlib import Path
 from typing import Callable, Dict, List
 
-ROOT = Path(__file__).resolve().parents[2]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-from app.services import buffer_client, getlate_client
-from app.services.publer_client import ping as publer_ping
+from . import buffer_client, getlate_client
+from .publer_client import ping as publer_ping
 
 LOGS = Path("logs")
 LOGS.mkdir(parents=True, exist_ok=True)
