@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-# --- Path guard: add before any other imports ---
+# --- path guard (TOP of file, before other imports) ---
 import sys
 from pathlib import Path
 
 APP_DIR = Path(__file__).resolve().parent
-SERVICES_DIR = APP_DIR / "services"
-for p in (APP_DIR, SERVICES_DIR):
-    if str(p) not in sys.path:
-        sys.path.insert(0, str(p))
+for p in (APP_DIR, APP_DIR / "services"):
+    p_str = str(p)
+    if p_str not in sys.path:
+        sys.path.insert(0, p_str)
 
 import os
 from io import BytesIO
@@ -22,7 +22,7 @@ from services.ai_news_service import load_queue, load_db  # type: ignore
 from services.analytics_service import load_summary  # type: ignore
 from services.publish_service import _last_provider  # type: ignore
 from services.theme_manager import THEMES, theme_toggle  # type: ignore
-from app.ui_utils import inject_global_styles
+from ui_utils import inject_global_styles
 
 st.set_page_config(page_title="XSELLER.AI Dashboard", page_icon="🤖", layout="wide")
 inject_global_styles()
