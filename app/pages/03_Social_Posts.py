@@ -4,6 +4,7 @@ from pathlib import Path
 import streamlit as st
 
 from app.services import buffer_client, getlate_client, publer_client
+from app.services.theme_manager import apply_theme
 from app.services.publish_service import (
     PROVIDERS,
     enqueue_post,

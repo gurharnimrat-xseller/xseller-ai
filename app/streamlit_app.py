@@ -10,11 +10,13 @@ import streamlit as st
 
 from app.services.ai_news_service import load_queue
 from app.services.analytics_service import load_summary
+from app.services.theme_manager import theme_toggle
 from app.ui_utils import inject_global_styles, load_theme
 
 st.set_page_config(page_title="XSELLER.AI Ops Console", page_icon="🤖", layout="wide")
 inject_global_styles()
 
+active_theme = theme_toggle(default="dark")
 theme = load_theme()
 PRIMARY = theme.get("primaryColor", "#10F4A0")
 
