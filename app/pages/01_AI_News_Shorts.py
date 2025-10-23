@@ -6,12 +6,14 @@ import pandas as pd
 import streamlit as st
 
 from app.services.ai_news_service import load_queue
+from app.services.theme_manager import theme_toggle
 from app.ui_utils import inject_global_styles
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 OUTPUTS_DIR = Path(__file__).resolve().parents[2] / "outputs"
 
 st.set_page_config(page_title="AI News Shorts", page_icon="📰", layout="wide")
+theme_toggle(default="dark")
 inject_global_styles()
 st.title("📰 AI News Shorts Queue")
 

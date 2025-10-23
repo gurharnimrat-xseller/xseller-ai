@@ -94,3 +94,6 @@ def theme_toggle(default: str = "dark") -> str:
         st.query_params.update({"theme": chosen})
     apply_theme(st.session_state["theme"])
     return st.session_state["theme"]
+
+
+__all__ = ["theme_toggle", "apply_theme", "get_theme_from_url", "THEMES"]

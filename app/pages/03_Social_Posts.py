@@ -4,7 +4,7 @@ from pathlib import Path
 import streamlit as st
 
 from app.services import buffer_client, getlate_client, publer_client
-from app.services.theme_manager import apply_theme
+from app.services.theme_manager import theme_toggle
 from app.services.publish_service import (
     PROVIDERS,
     enqueue_post,
@@ -14,6 +14,7 @@ from app.services.publish_service import (
 from app.ui_utils import inject_global_styles
 
 st.set_page_config(page_title="Social Posts", page_icon="📣", layout="wide")
+theme_toggle(default="dark")
 inject_global_styles()
 st.title("📣 Multi-Provider Social Posts")
 

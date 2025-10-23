@@ -21,7 +21,10 @@ def load_summary(default: Dict[str, Any] | None = None) -> Dict[str, Any]:
             "follower_conversion_delta": 0,
         },
         "daily_posts": [],
+        "daily_posts_30": [],
         "platform_views": [],
+        "hook_retention": [],
+        "hook_performance": [],
         "signals": [],
     }
     if not ANALYTICS_PATH.exists():
