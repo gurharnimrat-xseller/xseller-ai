@@ -9,7 +9,7 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from app.services.ai_news_service import load_queue
+from app.services.ai_news_service import load_queue, load_db
 from app.services.analytics_service import load_summary
 from app.services.publish_service import _last_provider
 from app.services.theme_manager import THEMES, theme_toggle
@@ -127,8 +127,9 @@ if nav_choice != "Dashboard":
 
 analytics = load_summary()
 queue_state = load_queue()
-shorts = queue_state.get("shorts", [])
-text_posts = queue_state.get("text_posts", [])
+queue_items = queue_state.get("items", [])
+shorts = [item for item in queue_items if item.get("type") in {"video", "short", "short_video"}]
+text_posts = [item for item in queue_items if item.get("type") in {"text_post", "text", "caption"}]
 metrics = analytics.get("metrics", {})
 
 

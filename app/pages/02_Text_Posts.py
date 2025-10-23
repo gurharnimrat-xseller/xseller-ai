@@ -16,7 +16,9 @@ theme_toggle(default="dark")
 inject_global_styles()
 st.title("✍️ Text + Image Posts")
 
-text_posts = load_queue().get("text_posts", [])
+queue_data = load_queue()
+queue_items = queue_data.get("items", [])
+text_posts = [item for item in queue_items if item.get("type") in {"text_post", "text", "caption"}]
 col1, col2 = st.columns([3, 1])
 col1.metric("Draft Posts", len(text_posts))
 col2.caption("Auto-generated from the top AI stories in the last 24 hours.")

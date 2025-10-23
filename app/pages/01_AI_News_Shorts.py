@@ -17,7 +17,9 @@ theme_toggle(default="dark")
 inject_global_styles()
 st.title("📰 AI News Shorts Queue")
 
-short_items = load_queue().get("shorts", [])
+queue_data = load_queue()
+queue_items = queue_data.get("items", [])
+short_items = [item for item in queue_items if item.get("type") in {"video", "short", "short_video"}]
 col_a, col_b, col_c = st.columns(3)
 col_a.metric("Queued Videos", len(short_items))
 produced = len(list(OUTPUTS_DIR.glob("*/video/*.mp4"))) if OUTPUTS_DIR.exists() else 0

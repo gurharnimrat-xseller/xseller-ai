@@ -1,1 +1,1 @@
-"""XSELLER.AI Streamlit application package."""
+"""XSELLER.AI application package."""
