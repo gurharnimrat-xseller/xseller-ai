@@ -224,21 +224,22 @@ daily_df = pd.DataFrame(daily_posts)
 
 daily_posts_30 = analytics.get("daily_posts_30") or [
     {"date": str(date), "posts": val}
-    for date, val in zip(pd.date_range(end=pd.Timestamp.today(), periods=30), [12, 14, 15, 13, 16, 18, 17, 19, 20, 18, 17, 21, 23, 22, 20, 19, 17, 16, 18, 21, 24, 22, 23, 19, 18, 16, 17, 18, 21, 23])
+    for date, val in zip(
+        pd.date_range(end=pd.Timestamp.today(), periods=30),
+        [12, 14, 15, 13, 16, 18, 17, 19, 20, 18, 17, 21, 23, 22, 20, 19, 17, 16, 18, 21, 24, 22, 23, 19, 18, 16, 17, 18, 21, 23],
+    )
 ]
 daily_30_df = pd.DataFrame(daily_posts_30)
 
-base_chart_config = {
-    "axis": {
-        "labelColor": TEXT,
-        "titleColor": TEXT,
-        "tickColor": MUTED,
-    },
-    "view": {"stroke": "transparent"},
-    "legend": {"labelColor": TEXT, "titleColor": TEXT},
-}
 
-chart1 = (
+def themed_chart(chart: alt.Chart) -> alt.Chart:
+    return (
+        chart.configure_axis(labelColor=TEXT, titleColor=TEXT, tickColor=MUTED)
+        .configure_view(stroke="transparent")
+        .configure_legend(labelColor=TEXT, titleColor=TEXT)
+    )
+
+chart1 = themed_chart(
     alt.Chart(platform_df)
     .mark_bar(color=PRIMARY, cornerRadiusTopLeft=8, cornerRadiusTopRight=8)
     .encode(
@@ -247,10 +248,9 @@ chart1 = (
         tooltip=["platform", "views"],
     )
     .properties(title="Views by Platform (30 Days)", height=280)
-    .configure(**base_chart_config)
 )
 
-chart2 = (
+chart2 = themed_chart(
     alt.Chart(hook_df)
     .mark_bar(color="#22C55E", cornerRadiusTopLeft=8, cornerRadiusTopRight=8)
     .encode(
@@ -259,10 +259,9 @@ chart2 = (
         tooltip=["hook_style", "retention_delta"],
     )
     .properties(title="Hook Style vs Retention", height=280)
-    .configure(**base_chart_config)
 )
 
-chart3 = (
+chart3 = themed_chart(
     alt.Chart(daily_df)
     .mark_line(color="#3B82F6", point=alt.OverlayMarkDef(color="#93C5FD"))
     .encode(
@@ -271,10 +270,9 @@ chart3 = (
         tooltip=["day", "posts"],
     )
     .properties(title="Daily Posts (Last 7 Days)", height=280)
-    .configure(**base_chart_config)
 )
 
-chart4 = (
+chart4 = themed_chart(
     alt.Chart(daily_30_df)
     .mark_area(line={"color": PRIMARY}, color="rgba(16,244,160,0.25)")
     .encode(
@@ -283,7 +281,6 @@ chart4 = (
         tooltip=["date:T", "posts:Q"],
     )
     .properties(title="Daily Posts (30 Days)", height=280)
-    .configure(**base_chart_config)
 )
 
 row1 = st.columns(2)
