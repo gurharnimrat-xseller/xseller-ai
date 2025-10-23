@@ -6,7 +6,7 @@ from pathlib import Path
 import streamlit as st
 
 from services.theme_manager import theme_toggle
-from app.ui_utils import inject_global_styles
+from ui_utils import inject_global_styles
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 LEARNING_PATH = DATA_DIR / "learning_log.json"

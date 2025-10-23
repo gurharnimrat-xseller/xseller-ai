@@ -7,7 +7,7 @@ import streamlit as st
 
 from services.healthcheck import run_all
 from services.theme_manager import theme_toggle
-from app.ui_utils import inject_global_styles
+from ui_utils import inject_global_styles
 
 LOGS_PATH = Path("logs/health_last.json")
 

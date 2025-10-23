@@ -11,7 +11,7 @@ from services.publish_service import (
     process_queue,
     _last_provider,
 )
-from app.ui_utils import inject_global_styles
+from ui_utils import inject_global_styles
 
 st.set_page_config(page_title="Social Posts", page_icon="📣", layout="wide")
 theme_toggle(default="dark")

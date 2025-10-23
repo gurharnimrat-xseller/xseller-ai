@@ -5,7 +5,7 @@ import streamlit as st
 
 from services.analytics_service import load_summary
 from services.theme_manager import theme_toggle
-from app.ui_utils import inject_global_styles
+from ui_utils import inject_global_styles
 
 st.set_page_config(page_title="Analytics", page_icon="📊", layout="wide")
 theme_toggle(default="dark")
