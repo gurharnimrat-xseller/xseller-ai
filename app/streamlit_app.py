@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Dict, List
@@ -9,10 +10,16 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from app.services.ai_news_service import load_queue, load_db
-from app.services.analytics_service import load_summary
-from app.services.publish_service import _last_provider
-from app.services.theme_manager import THEMES, theme_toggle
+APP_DIR = Path(__file__).resolve().parent
+SERVICES_DIR = APP_DIR / "services"
+for path in (APP_DIR, SERVICES_DIR):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+from services.ai_news_service import load_queue, load_db  # type: ignore
+from services.analytics_service import load_summary  # type: ignore
+from services.publish_service import _last_provider  # type: ignore
+from services.theme_manager import THEMES, theme_toggle  # type: ignore
 from app.ui_utils import inject_global_styles
 
 st.set_page_config(page_title="XSELLER.AI Dashboard", page_icon="🤖", layout="wide")

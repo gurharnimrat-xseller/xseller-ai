@@ -5,13 +5,15 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 APP_DIR = Path(__file__).resolve().parents[1]
+ROOT_DIR = APP_DIR.parent
 DATA_DIR = APP_DIR / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
 QUEUE_FP = DATA_DIR / "ai_shorts_queue.json"
 DB_FP = DATA_DIR / "ai_shorts_db.json"
 
 
 def _ensure_files() -> None:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
     if not QUEUE_FP.exists():
         QUEUE_FP.write_text(json.dumps({"items": []}, indent=2), encoding="utf-8")
     if not DB_FP.exists():
