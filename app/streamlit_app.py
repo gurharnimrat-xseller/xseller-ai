@@ -1,20 +1,22 @@
 from __future__ import annotations
 
-import os
+# --- Path guard: add before any other imports ---
 import sys
-from io import BytesIO
 from pathlib import Path
+
+APP_DIR = Path(__file__).resolve().parent
+SERVICES_DIR = APP_DIR / "services"
+for p in (APP_DIR, SERVICES_DIR):
+    if str(p) not in sys.path:
+        sys.path.insert(0, str(p))
+
+import os
+from io import BytesIO
 from typing import Any, Dict, List
 
 import altair as alt
 import pandas as pd
 import streamlit as st
-
-APP_DIR = Path(__file__).resolve().parent
-SERVICES_DIR = APP_DIR / "services"
-for path in (APP_DIR, SERVICES_DIR):
-    if str(path) not in sys.path:
-        sys.path.insert(0, str(path))
 
 from services.ai_news_service import load_queue, load_db  # type: ignore
 from services.analytics_service import load_summary  # type: ignore
